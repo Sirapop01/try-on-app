@@ -1,24 +1,61 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+// app/_layout.tsx
+import React, { useEffect, useState } from "react";
+import { Slot, useRouter, useSegments } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
+import { useAuthState } from "../hooks/useAuth";
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// กันไม่ให้ซ่อนเองอัตโนมัติ (เรียกครั้งเดียวระดับโมดูล)
+SplashScreen.preventAutoHideAsync().catch(() => { /* ignore */ });
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
+const MIN_SPLASH_MS = 1800; // ปรับช่วง 1500–2000ms ตามที่ต้องการ
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
+  const { user, initializing } = useAuthState();
+  const router = useRouter();
+  const segments = useSegments();
 
-  return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
-  );
+  // เวลาเริ่มแสดง splash (ครั้งแรกที่ component ถูก mount)
+  const [startedAt] = useState<number>(() => Date.now());
+  const [hid, setHid] = useState(false);
+
+  // Guard เส้นทางตามเดิม
+  useEffect(() => {
+    if (initializing) return;
+    const inAuthGroup = segments[0] === "(auth)";
+    if (!user && !inAuthGroup) {
+      router.replace("/(auth)/login");
+    } else if (user && inAuthGroup) {
+      router.replace("/(tabs)/");
+    }
+  }, [user, initializing, segments, router]);
+
+  // ควบคุมการซ่อน Splash: รอ init เสร็จ + ให้ครบ MIN_SPLASH_MS
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (initializing || hid) return;
+
+      const elapsed = Date.now() - startedAt;
+      const remain = Math.max(0, MIN_SPLASH_MS - elapsed);
+
+      // หน่วงเวลาให้ครบอย่างน้อย MIN_SPLASH_MS
+      await new Promise((r) => setTimeout(r, remain));
+
+      if (!cancelled) {
+        try {
+          await SplashScreen.hideAsync();
+          setHid(true);
+        } catch {
+          // ignore
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initializing, startedAt, hid]);
+
+  // ไม่ต้องคืน UI โหลดเองระหว่าง splash — native splash จะค้างไว้จน hideAsync()
+  return <Slot />;
 }

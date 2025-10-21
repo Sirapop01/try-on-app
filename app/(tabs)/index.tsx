@@ -1,98 +1,216 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+// app/(tabs)/index.tsx
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Image,
+  Dimensions,
+  TouchableOpacity,
+  Alert,
+} from "react-native";
+import {
+  Screen,
+  Segmented,
+  SectionTitle,
+  ShirtCard,
+  PlusPrimary,
+  PlusSmall,
+} from "../../components/ui";
+import { useRouter } from "expo-router";
+import { useSelectionStore } from "../../store/selectionStore";
+import * as ImagePicker from "expo-image-picker";
+import { toBase64Compressed } from "../../services/image";
+import {
+  addUserShirt,
+  listUserShirts,
+  type UserShirt,
+} from "../../services/garments";
+import { useAuthState } from "../../hooks/useAuth";
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const WIDTH = Dimensions.get("window").width;
+const CARD_W = WIDTH - 32;
+
+const mockCatalog = [
+  {
+    id: "1",
+    title: "Classic Casual Shirt",
+    subtitle: "Urban Style",
+    img: "https://images.unsplash.com/photo-1596755094514-f87e8e8b4a49?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "2",
+    title: "Formal White Shirt",
+    subtitle: "Executive",
+    img: "https://images.unsplash.com/photo-1520975802020-04f4dd6b8333?q=80&w=1200&auto=format&fit=crop",
+  },
+  {
+    id: "3",
+    title: "Patterned Shirt",
+    subtitle: "Street",
+    img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1200&auto=format&fit=crop",
+  },
+];
 
 export default function HomeScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
-              />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+  const [tab, setTab] = useState<"catalog" | "mine">("catalog");
+  const { setGarment } = useSelectionStore();
+  const router = useRouter();
+  const { user } = useAuthState();
+  const [mine, setMine] = useState<UserShirt[]>([]);
+  const [loadingAdd, setLoadingAdd] = useState(false);
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+  // ========== Catalog actions ==========
+  const onTry = (item: any) => {
+    setGarment({ id: item.id, name: item.title, imageUrl: item.img });
+    router.push("/(tabs)/try-on");
+  };
+
+  // ========== My Shirts actions ==========
+  const loadMine = async () => {
+    if (!user) return;
+    const items = await listUserShirts(user.uid, 50);
+    setMine(items);
+  };
+
+  useEffect(() => {
+    loadMine();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.uid]);
+
+  const addShirt = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (perm.status !== "granted") {
+      return Alert.alert("Permission needed", "Please allow photo access.");
+    }
+
+    const r = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 1,
+    });
+    if (r.canceled || !r.assets?.[0]?.uri) return;
+    if (!user) return Alert.alert("Please login first");
+
+    try {
+      setLoadingAdd(true);
+      const b64 = await toBase64Compressed(r.assets[0].uri, 1080);
+      await addUserShirt(user.uid, b64); // เพิ่มเข้า My Shirts (Cloudinary + Firestore)
+      await loadMine(); // รีโหลดรายการให้เห็นทันที
+      Alert.alert("Added!", "Your shirt was added to My Shirts.");
+    } catch (e: any) {
+      Alert.alert("Add failed", e?.message ?? "Unknown error");
+    } finally {
+      setLoadingAdd(false);
+    }
+  };
+
+  const goTryOnWith = (it: UserShirt) => {
+    setGarment({ imageUrl: it.imageUrl });
+    router.push("/(tabs)/try-on");
+  };
+
+  // ========== UI ==========
+  const renderCatalog = () => (
+    <>
+      <SectionTitle>Explore Collection</SectionTitle>
+      <FlatList
+        data={mockCatalog}
+        keyExtractor={(it) => it.id}
+        horizontal
+        pagingEnabled
+        showsHorizontalScrollIndicator={false}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        renderItem={({ item }) => (
+          <View style={{ width: CARD_W }}>
+            <ShirtCard
+              img={item.img}
+              title={item.title}
+              subtitle={item.subtitle}
+              onPress={() => onTry(item)}
+            />
+          </View>
+        )}
+      />
+    </>
+  );
+
+  const renderMine = () => (
+    <View style={{ paddingHorizontal: 16, marginTop: 8 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 12,
+        }}
+      >
+        <Text style={{ fontSize: 16, fontWeight: "700" }}>Your Collection</Text>
+        <PlusSmall
+          title={loadingAdd ? "Adding..." : "Add Shirt"}
+          onPress={addShirt}
+          style={{ opacity: loadingAdd ? 0.6 : 1 }}
+        />
+      </View>
+
+      {mine.length === 0 ? (
+        <View style={{ alignItems: "center", marginTop: 24 }}>
+          <Text style={{ color: "#6B7280", marginBottom: 12 }}>
+            You haven't added any shirts yet.
+          </Text>
+          <PlusPrimary
+            title={loadingAdd ? "Adding..." : "Add Your First Shirt"}
+            onPress={addShirt}
+            style={{ opacity: loadingAdd ? 0.6 : 1 }}
+          />
+        </View>
+      ) : (
+        <View
+          style={{
+            flexDirection: "row",
+            flexWrap: "wrap",
+            gap: 12,
+            paddingBottom: 16,
+          }}
+        >
+          {mine.map((it) => (
+            <TouchableOpacity
+              key={it.id}
+              onPress={() => goTryOnWith(it)}
+              style={{
+                width: "48%",
+                backgroundColor: "#fff",
+                borderRadius: 12,
+                overflow: "hidden",
+                borderWidth: 1,
+                borderColor: "#E5E7EB",
+              }}
+            >
+              <Image
+                source={{ uri: it.imageUrl }}
+                style={{ width: "100%", height: 140 }}
+              />
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+
+  return (
+    <Screen>
+      <View style={{ paddingHorizontal: 16, paddingTop: 12 }}>
+        <Text style={{ color: "#6B7280" }}>Welcome back,</Text>
+        <Text style={{ fontWeight: "800", fontSize: 18 }}>Alex!</Text>
+      </View>
+
+      <Segmented
+        value={tab}
+        onChange={setTab}
+        counts={{ catalog: mockCatalog.length, mine: mine.length }}
+      />
+
+      {tab === "catalog" ? renderCatalog() : renderMine()}
+    </Screen>
   );
 }
-
-const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
-});
