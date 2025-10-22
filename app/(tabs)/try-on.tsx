@@ -158,7 +158,7 @@ export default function TryOnScreen() {
   return (
       <Screen>
         <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
-          <Text style={{ fontSize: 18, fontWeight: "700" }}>Virtual Try-On</Text>
+          <Text style={{marginTop:20, fontSize: 18, fontWeight: "700" }}>Virtual Try-On</Text>
 
           {!personB64 ? (
               <View
