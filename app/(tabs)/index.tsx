@@ -31,26 +31,28 @@ import { useAuthState } from "../../hooks/useAuth";
 const WIDTH = Dimensions.get("window").width;
 const CARD_W = WIDTH - 32;
 
-const mockCatalog = [
-  {
-    id: "1",
-    title: "Classic Casual Shirt",
-    subtitle: "Urban Style",
-    img: "https://images.unsplash.com/photo-1596755094514-f87e8e8b4a49?q=80&w=1200&auto=format&fit=crop",
-  },
-  {
-    id: "2",
-    title: "Formal White Shirt",
-    subtitle: "Executive",
-    img: "https://images.unsplash.com/photo-1520975802020-04f4dd6b8333?q=80&w=1200&auto=format&fit=crop",
-  },
+export const mockCatalog = [
   {
     id: "3",
     title: "Patterned Shirt",
     subtitle: "Street",
-    img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1200&auto=format&fit=crop",
+    img: "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=1200&q=80",
+  },
+
+  {
+    id: "5",
+    title: "Black Oxford Shirt",
+    subtitle: "Smart",
+    img: "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1200&q=80",
+  },
+  {
+    id: "6",
+    title: "Checked Flannel",
+    subtitle: "Outdoor",
+    img: "https://images.unsplash.com/photo-1516822003754-cca485356ecb?auto=format&fit=crop&w=1200&q=80",
   },
 ];
+
 
 export default function HomeScreen() {
   const [tab, setTab] = useState<"catalog" | "mine">("catalog");
