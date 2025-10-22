@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useAuthState } from "../hooks/useAuth";
+import { AlertNotificationRoot } from "react-native-alert-notification";
 
 // กันไม่ให้ซ่อนเองอัตโนมัติ (เรียกครั้งเดียวระดับโมดูล)
 SplashScreen.preventAutoHideAsync().catch(() => { /* ignore */ });
 
-const MIN_SPLASH_MS = 1800; // ปรับช่วง 1500–2000ms ตามที่ต้องการ
+const MIN_SPLASH_MS = 1800; // ปรับช่วง 1500–2000ms ตามต้องการ
 
 export default function RootLayout() {
   const { user, initializing } = useAuthState();
@@ -25,7 +26,7 @@ export default function RootLayout() {
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup) {
-      router.replace("/(tabs)/");
+      router.replace("/(tabs)");
     }
   }, [user, initializing, segments, router]);
 
@@ -38,7 +39,6 @@ export default function RootLayout() {
       const elapsed = Date.now() - startedAt;
       const remain = Math.max(0, MIN_SPLASH_MS - elapsed);
 
-      // หน่วงเวลาให้ครบอย่างน้อย MIN_SPLASH_MS
       await new Promise((r) => setTimeout(r, remain));
 
       if (!cancelled) {
@@ -51,11 +51,13 @@ export default function RootLayout() {
       }
     })();
 
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [initializing, startedAt, hid]);
 
-  // ไม่ต้องคืน UI โหลดเองระหว่าง splash — native splash จะค้างไว้จน hideAsync()
-  return <Slot />;
+  // ครอบทั้งแอปด้วย AlertNotificationRoot
+  return (
+      <AlertNotificationRoot>
+        <Slot />
+      </AlertNotificationRoot>
+  );
 }
