@@ -5,33 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="23a41679-8930-4729-9007-f1492513ee06" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/(auth)/login.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/(auth)/register.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/(tabs)/profile.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/(tabs)/wardrobe.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/components/ui.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/appConfig.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/constants/firebase.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hooks/useAuth.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hooks/useFirebase.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/cloudinary.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/history.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/image.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/mockMl.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/providers/localMediaStore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/userService.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/store/selectionStore.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/types/user.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.json" beforeDir="false" afterPath="$PROJECT_DIR$/app.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/explore.tsx" beforeDir="false" />
+      <change afterPath="$PROJECT_DIR$/app/(profile)/edit.tsx" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hooks/useUserProfile.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(auth)/register.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(auth)/register.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/assets/images/splash-icon.png" beforeDir="false" afterPath="$PROJECT_DIR$/assets/images/splash-icon.png" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/profile.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/userService.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/user.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -44,10 +26,22 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 6
-}]]></component>
+  <component name="GitHubPullRequestSearchHistory">{
+  &quot;lastFilter&quot;: {
+    &quot;state&quot;: &quot;OPEN&quot;,
+    &quot;assignee&quot;: &quot;Sirapop01&quot;
+  }
+}</component>
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Sirapop01/try-on-app.git&quot;,
+    &quot;accountId&quot;: &quot;c2212fe5-b670-45ce-87a6-b4569919375b&quot;
+  }
+}</component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 6
+}</component>
   <component name="ProjectId" id="34NHBPfNoz8DQS3XGOsAkqbojmt" />
   <component name="ProjectLevelVcsManager">
     <ConfirmationsSetting value="2" id="Add" />
@@ -66,8 +60,16 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "master",
-    "settings.editor.selected.configurable": "AndroidSdkUpdater"
+    "git-widget-placeholder": "main",
+    "last_opened_file_path": "D:/T12-4/Mobile App/try-on-app",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "AndroidSdkUpdater",
+    "ts.external.directory.path": "D:\\T12-4\\Mobile App\\try-on-app\\node_modules\\typescript\\lib",
+    "vue.rearranger.settings.migration": "true"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -76,6 +78,14 @@
       <recent name="D:\T12-4\Mobile App\try-on-app\assets" />
     </key>
   </component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-jdk-9823dce3aa75-fbdcb00ec9e3-intellij.indexing.shared.core-IU-251.25410.129" />
+        <option value="bundled-js-predefined-d6986cc7102b-6a121458b545-JavaScript-IU-251.25410.129" />
+      </set>
+    </attachedChunks>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="23a41679-8930-4729-9007-f1492513ee06" name="Changes" comment="" />
@@ -83,8 +93,13 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1761046974437</updated>
+      <workItem from="1761113609318" duration="122000" />
+      <workItem from="1761113941007" duration="3586000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="UnknownFeatures">
     <option featureType="com.intellij.fileTypeFactory" implementationName="*.ts" />
