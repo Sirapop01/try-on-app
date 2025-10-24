@@ -1,45 +1,27 @@
 // services/history.ts
-import { doc, setDoc, serverTimestamp, collection, query, orderBy, limit, getDocs } from "firebase/firestore";
-import { useFirebase } from "../hooks/useFirebase";
+import { getFirestore, doc, collection, addDoc, serverTimestamp, setDoc } from "firebase/firestore";
+import { getApp } from "firebase/app";
 
+// โครงสร้างข้อมูลที่บันทึก
 export type TryOnHistoryItem = {
-  id: string;
-  outputUrl: string;
-  publicId: string;
-  width?: number;
-  height?: number;
-  format?: string;
-  createdAt: any;
+  imageUrl: string | null;          // Cloudinary URL
+  localUri?: string | null;   // URI ที่เก็บไว้ในเครื่องของแอป (documentDirectory)
+  createdAt?: number;         // epoch ms (เผื่อใช้เรียง), เราจะเก็บ serverTimestamp ด้วย
+  garmentUrl?: string | null;
+  hasGarmentB64?: boolean;
 };
 
-export async function saveResultMeta(uid: string, data: {
-  secure_url: string;
-  public_id: string;
-  width?: number;
-  height?: number;
-  format?: string;
-}) {
-  const { db } = useFirebase();
-  const id = `${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
-  const ref = doc(db, `users/${uid}/tryOnResults/${id}`);
-  await setDoc(ref, {
-    outputUrl: data.secure_url ?? null,
-    publicId: data.public_id ?? null,
-    width: data.width ?? null,
-    height: data.height ?? null,
-    format: data.format ?? null,
-    createdAt: serverTimestamp(),
-  }, { merge: true });
-  return id;
+export async function addTryOnHistory(uid: string, item: TryOnHistoryItem) {
+  const app = getApp();
+  const db = getFirestore(app);
+  // เก็บไว้ใต้ users/{uid}/wardrobe
+  const col = collection(doc(db, "users", uid), "wardrobe");
+  await addDoc(col, {
+    ...item,
+    createdAt: item.createdAt ?? Date.now(),
+    createdAtServer: serverTimestamp(),
+  });
 }
 
-export async function listResults(uid: string, take = 50): Promise<TryOnHistoryItem[]> {
-  const { db } = useFirebase();
-  const q = query(
-    collection(db, `users/${uid}/tryOnResults`),
-    orderBy("createdAt", "desc"),
-    limit(take)
-  );
-  const snap = await getDocs(q);
-  return snap.docs.map(d => ({ id: d.id, ...(d.data() as any) }));
-}
+// ถ้าต้องการอัปเดต/ลบ ในอนาคตสามารถเพิ่มฟังก์ชันได้ เช่น:
+// export async function removeTryOnHistory(uid: string, id: string) { ... }

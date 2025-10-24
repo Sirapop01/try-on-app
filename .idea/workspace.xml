@@ -5,9 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="23a41679-8930-4729-9007-f1492513ee06" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/app/preview.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/try-on-result.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/try-on-result.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/wardrobe.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/wardrobe.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/try-on-result.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/try-on-result.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/components/ui.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/components/ui.tsx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/cloudinary.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/providers/cloudinary.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/garments.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/garments.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/history.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/history.ts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/services/user.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/user.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -54,7 +61,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "save-img",
     "last_opened_file_path": "D:/T12-4/Mobile App/try-on-app/assets/images",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -72,6 +79,8 @@
     </key>
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\T12-4\Mobile App\try-on-app\app" />
+      <recent name="D:\T12-4\Mobile App\try-on-app\services\providers" />
+      <recent name="D:\T12-4\Mobile App\try-on-app\services" />
       <recent name="D:\T12-4\Mobile App\try-on-app\assets\images" />
       <recent name="D:\T12-4\Mobile App\try-on-app\assets" />
     </key>

@@ -1,10 +1,38 @@
 import React from "react";
-import { View, Text, TouchableOpacity, Image, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, Image, StyleSheet,ViewProps } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-export const Screen = ({ children }: any) => (
-  <View style={{ flex: 1, backgroundColor: "#F3F4F6" }}>{children}</View>
-);
+type ScreenProps = ViewProps & {
+    edgesTop?: boolean;
+    edgesBottom?: boolean;
+    backgroundColor?: string;
+};
+
+export function Screen({
+                           children,
+                           style,
+                           edgesTop = true,
+                           edgesBottom = false,
+                           backgroundColor = "#fff",
+                           ...rest
+                       }: ScreenProps) {
+    return (
+        <SafeAreaView
+            edges={[
+                ...(edgesTop ? (["top"] as const) : []),
+                "left",
+                "right",
+                ...(edgesBottom ? (["bottom"] as const) : []),
+            ]}
+            style={{ flex: 1, backgroundColor }}
+        >
+            <View style={[{ flex: 1 }, style]} {...rest}>
+                {children}
+            </View>
+        </SafeAreaView>
+    );
+}
 
 export const SectionTitle = ({ children }: any) => (
   <Text style={{ fontSize: 16, fontWeight: "700", marginVertical: 12, marginHorizontal: 16 }}>

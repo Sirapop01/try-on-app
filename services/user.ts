@@ -2,7 +2,7 @@
 import { doc, getDoc, setDoc, serverTimestamp } from "firebase/firestore";
 import { updateProfile, User } from "firebase/auth";
 import { useFirebase } from "../hooks/useFirebase";
-import { uploadBase64ToCloudinary } from "./cloudinary";
+import { uploadBase64ToCloudinary } from "./providers/cloudinary";
 import { toBase64Compressed } from "./image";
 
 export type UserProfileDoc = {

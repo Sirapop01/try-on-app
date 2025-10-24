@@ -1,5 +1,5 @@
 // services/garments.ts
-import { uploadBase64ToCloudinary } from "./cloudinary";
+import { uploadBase64ToCloudinary } from "./providers/cloudinary";
 import { useFirebase } from "../hooks/useFirebase";
 import { doc, setDoc, serverTimestamp, collection, query, orderBy, getDocs, limit } from "firebase/firestore";
 
