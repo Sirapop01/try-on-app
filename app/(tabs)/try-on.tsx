@@ -156,7 +156,7 @@ export default function TryOnScreen() {
     if (!garment?.base64 && !garment?.imageUrl)
       return Alert.alert("Please select a shirt.");
 
-    router.push("/(tabs)/try-on-result");
+    router.push("/try-on-result");
   };
 
   const isSelected = (op: Option) => {

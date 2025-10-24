@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="23a41679-8930-4729-9007-f1492513ee06" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/(tabs)/try-on-result.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/(tabs)/try-on-result.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/try-on-result.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,7 +54,7 @@
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "tryon",
+    "git-widget-placeholder": "main",
     "last_opened_file_path": "D:/T12-4/Mobile App/try-on-app/assets/images",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
@@ -73,6 +71,7 @@
       <recent name="D:\T12-4\Mobile App\try-on-app\assets\images" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\T12-4\Mobile App\try-on-app\app" />
       <recent name="D:\T12-4\Mobile App\try-on-app\assets\images" />
       <recent name="D:\T12-4\Mobile App\try-on-app\assets" />
     </key>

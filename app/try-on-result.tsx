@@ -10,10 +10,10 @@ import {
 import { useRouter } from "expo-router";
 import * as FileSystem from "expo-file-system/legacy";
 import * as MediaLibrary from "expo-media-library";
-import { Screen, PrimaryBtn, GhostBtn } from "../../components/ui";
-import { useSelectionStore } from "../../store/selectionStore";
-import { tryOn } from "../../services/ml";
-import { toDataUri } from "../../services/image";
+import { Screen, PrimaryBtn, GhostBtn } from "../components/ui";
+import { useSelectionStore } from "../store/selectionStore";
+import { tryOn } from "../services/ml";
+import { toDataUri } from "../services/image";
 
 export default function TryOnResult() {
     const router = useRouter();
