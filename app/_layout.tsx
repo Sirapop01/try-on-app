@@ -4,7 +4,7 @@ import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useAuthState } from "../hooks/useAuth";
 import { AlertNotificationRoot } from "react-native-alert-notification";
-
+import { AuthProvider } from "@/context/AuthContext";
 // กันไม่ให้ซ่อนเองอัตโนมัติ (เรียกครั้งเดียวระดับโมดูล)
 SplashScreen.preventAutoHideAsync().catch(() => { /* ignore */ });
 
@@ -56,8 +56,10 @@ export default function RootLayout() {
 
   // ครอบทั้งแอปด้วย AlertNotificationRoot
   return (
-      <AlertNotificationRoot>
-        <Slot />
-      </AlertNotificationRoot>
+      <AuthProvider>
+        <AlertNotificationRoot>
+          <Slot />
+        </AlertNotificationRoot>
+      </AuthProvider>
   );
 }

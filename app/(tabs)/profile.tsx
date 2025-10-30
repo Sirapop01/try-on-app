@@ -7,6 +7,7 @@ import { useAuthActions } from "../../hooks/useAuth";
 import { useRouter } from "expo-router";
 import { useUserProfile } from "../../hooks/useUserProfile";
 import { ALERT_TYPE, Dialog, Toast } from "react-native-alert-notification";
+import {useAuth} from "@/context/AuthContext";
 
 type Action = {
     icon: keyof typeof Ionicons.glyphMap;
@@ -16,6 +17,7 @@ type Action = {
 };
 
 export default function Profile() {
+    const { user } = useAuth();
     const router = useRouter();
     const { logout } = useAuthActions();
     const { loading, profile, refresh } = useUserProfile();
@@ -45,10 +47,28 @@ export default function Profile() {
             title: "ออกจากระบบ?",
             textBody: "ยืนยันการออกจากระบบตอนนี้",
             button: "ออกจากระบบ",
-            closeOnOverlayTap: true, // แตะพื้นหลังเพื่อยกเลิก
+            closeOnOverlayTap: true,     // แตะพื้นหลังเพื่อปิดได้
+            autoClose: 0,                // กัน auto-close แปลก ๆ ระหว่าง async
             onPressButton: async () => {
-                await logout();
-                Toast.show({ type: ALERT_TYPE.SUCCESS, title: "ออกจากระบบแล้ว" });
+                try {
+                    // ปิดโมดัลทันทีเพื่อไม่ให้ค้าง
+                    Dialog.hide();
+
+                    await logout();          // ทำ signOut / เคลียร์ state
+                    Toast.show({ type: ALERT_TYPE.SUCCESS, title: "ออกจากระบบแล้ว" });
+
+                    // แล้วค่อยนำทางออกจากหน้าโปรไฟล์
+                    // (เลือกอย่างใดอย่างหนึ่งตาม flow)
+                    // router.replace("/");
+                    // router.replace("/(tabs)");
+                } catch (e: any) {
+                    // ถ้า error เกิดขึ้น อาจแสดงแจ้งเตือน แล้วเปิด dialog ใหม่ถ้าต้องการ
+                    Toast.show({
+                        type: ALERT_TYPE.DANGER,
+                        title: "ออกจากระบบไม่สำเร็จ",
+                        textBody: e?.message ?? "Unknown error",
+                    });
+                }
             },
         });
     };
@@ -201,6 +221,16 @@ export default function Profile() {
                             </TouchableOpacity>
                         ))}
                     </View>
+                    {user?.role === "admin" && (
+                        <TouchableOpacity
+                            onPress={() => router.push("/admin/catalog")} // ⬅️ ไม่ต้องใส่ (admin) ใน path
+                            style={{ marginTop: 12, padding: 12, borderRadius: 10, backgroundColor: "#f59e0b" }}
+                        >
+                            <Text style={{ color: "white", fontWeight: "700", textAlign: "center" }}>
+                                Admin Console
+                            </Text>
+                        </TouchableOpacity>
+                    )}
                 </View>
             </ScrollView>
         </Screen>

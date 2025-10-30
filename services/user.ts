@@ -5,6 +5,7 @@ import { useFirebase } from "../hooks/useFirebase";
 import { uploadBase64ToCloudinary } from "./cloudinary";
 import { toBase64Compressed } from "./image";
 
+
 export type UserProfileDoc = {
   uid: string;
   displayName: string | null;
@@ -13,6 +14,7 @@ export type UserProfileDoc = {
   phone?: string | null;
   bio?: string | null;
   gender?: "male" | "female" | "other" | null;
+  role?: string;
   settings?: {
     keepUploads?: boolean;
     shareTelemetry?: boolean;
@@ -34,6 +36,7 @@ export async function createUserProfile(u: User, data: Partial<UserProfileDoc>) 
     phone: data.phone ?? null,
     bio: data.bio ?? null,
     gender: data.gender ?? null,
+    role:"user",
     settings: {
       keepUploads: data.settings?.keepUploads ?? true,
       shareTelemetry: data.settings?.shareTelemetry ?? false,

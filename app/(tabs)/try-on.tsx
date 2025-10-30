@@ -11,34 +11,17 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 
 import { Screen, PrimaryBtn, GhostBtn, SectionTitle } from "../../components/ui";
 import { useSelectionStore } from "../../store/selectionStore";
 import { toBase64Compressed, toDataUri } from "../../services/image";
-import { listUserShirts, type UserShirt } from "../../services/garments";
+import { subscribeUserShirts, type UserShirt } from "../../services/garments";
 import { useAuthState } from "../../hooks/useAuth";
 import { APP_CONFIG } from "../../config/appConfig";
+import { listCatalog, type CatalogListItem } from "@/services/catalog";
 
-// ======= ตัวอย่าง Catalog (แทนด้วยของจริงได้ภายหลัง) =======
-export const catalogThumbs = [
-  {
-    id: "t3",
-    imageUrl:
-        "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "t5",
-    imageUrl:
-        "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80",
-  },
-  {
-    id: "t6",
-    imageUrl:
-        "https://images.unsplash.com/photo-1516822003754-cca485356ecb?auto=format&fit=crop&w=800&q=80",
-  },
-];
-
-// เสิร์ฟให้ thumbnail ใช้งานง่าย + ปลอดภัยเรื่อง type
+// ---- ตัวเลือกที่จะแสดงในแถบเสื้อ ----
 type Option =
     | { key: string; source: "catalog"; imageUrl: string }
     | { key: string; source: "mine"; imageUrl: string }
@@ -52,18 +35,42 @@ export default function TryOnScreen() {
   const [personB64, setPersonB64] = useState<string | undefined>();
   const [mine, setMine] = useState<UserShirt[]>([]);
   const [busy, setBusy] = useState(false);
-  const [resultB64, setResultB64] = useState<string | null>(null); // คง state เดิมไว้ เผื่อใช้ต่อ
 
-  // โหลดเสื้อของผู้ใช้จาก Firestore (My Shirts)
+  // ✅ Catalog จาก Firestore (โหลดเมื่อหน้าโฟกัส เพื่อความไว)
+  const [catalog, setCatalog] = useState<CatalogListItem[]>([]);
+  const [catLoading, setCatLoading] = useState(true);
+
+  const loadCatalog = async () => {
+    try {
+      setCatLoading(true);
+      const items = await listCatalog(30);
+      setCatalog(items);
+    } catch {
+      // เงียบไว้—แสดงลิสต์ที่มีอยู่ต่อ
+    } finally {
+      setCatLoading(false);
+    }
+  };
+
+  // โหลด catalog ตอนเข้า/กลับมาหน้านี้
+  useFocusEffect(
+      React.useCallback(() => {
+        loadCatalog();
+      }, [])
+  );
+
+  // ✅ My Shirts: Subscribe realtime (ทน index/ serverTimestamp)
   useEffect(() => {
-    (async () => {
-      if (!user) return;
-      const items = await listUserShirts(user.uid, 50);
-      setMine(items);
-    })();
+    if (!user?.uid) {
+      setMine([]);
+      return;
+    }
+    const unsub = subscribeUserShirts(user.uid, (rows) => setMine(rows), 100);
+    return () => unsub && unsub();
   }, [user?.uid]);
 
-  // รวม: uploaded (base64 สดจาก store) + mine + catalog และ "ย้ายตัวที่เลือกขึ้นก่อนสุด"
+  // รวม options: uploaded + mine + catalog(Firestore)
+  // และ ensure ว่าเสื้อที่เลือก (garment.imageUrl/base64) ถูก "ยัด" เข้า list ถ้ายังไม่มี
   const options: Option[] = useMemo(() => {
     const out: Option[] = [];
 
@@ -78,19 +85,34 @@ export default function TryOnScreen() {
     out.push(
         ...mine.map<Option>((x) => ({
           key: `m_${x.id}`,
-          source: "mine" as const,
+          source: "mine",
           imageUrl: x.imageUrl,
         }))
     );
 
     out.push(
-        ...catalogThumbs.map<Option>((x) => ({
+        ...catalog.map<Option>((x) => ({
           key: `c_${x.id}`,
-          source: "catalog" as const,
+          source: "catalog",
           imageUrl: x.imageUrl,
         }))
     );
 
+    // ถ้าเลือกมาจากหน้าอื่นและยังไม่มีใน options ให้ inject เข้าไป
+    if (garment?.imageUrl) {
+      const exists =
+          out.some((o) => o.source !== "uploaded" && (o as any).imageUrl === garment.imageUrl) ||
+          false;
+      if (!exists) {
+        out.unshift({
+          key: `sel_${Math.random().toString(36).slice(2, 8)}`,
+          source: "catalog",
+          imageUrl: garment.imageUrl,
+        });
+      }
+    }
+
+    // ย้ายตัวที่เลือกขึ้นก่อนสุดเพื่อให้เห็น selected ชัด
     const selectedKey = garment?.base64
         ? `up_${garment.base64.slice(0, 24)}`
         : garment?.imageUrl
@@ -114,7 +136,7 @@ export default function TryOnScreen() {
     }
 
     return withCmp.map(({ _cmp, ...rest }) => rest) as Option[];
-  }, [garment?.base64, garment?.imageUrl, mine]);
+  }, [garment?.base64, garment?.imageUrl, mine, catalog]);
 
   // เลือกรูปคน
   const pickPerson = async () => {
@@ -123,11 +145,10 @@ export default function TryOnScreen() {
       return Alert.alert("Please allow photo access.");
 
     const r = await ImagePicker.launchImageLibraryAsync({
-      // ใช้ API ใหม่ของ SDK 54 แทน MediaTypeOptions
-      mediaTypes: ["images"] as any, // บังคับ type ให้ผ่านใน TS
+      mediaTypes: ["images"] as any, // SDK 54
+      allowsEditing: true,
       quality: 1,
     });
-
     if (r.canceled || !r.assets?.[0]?.uri) return;
 
     setBusy(true);
@@ -135,7 +156,6 @@ export default function TryOnScreen() {
       const b64 = await toBase64Compressed(r.assets[0].uri, 1080);
       setPersonB64(b64);
       setPerson({ base64: b64, localUri: r.assets[0].uri });
-      setResultB64(null); // เคลียร์ผลเก่า (ถ้ามี)
     } catch (e: any) {
       Alert.alert("Failed to load photo", e?.message ?? "Unknown error");
     } finally {
@@ -143,19 +163,17 @@ export default function TryOnScreen() {
     }
   };
 
-  // แตะ thumbnail เพื่อเปลี่ยนเสื้อที่เลือก
+  // แตะ thumbnail เปลี่ยนเสื้อที่เลือก
   const selectOption = (op: Option) => {
     if (op.source === "uploaded") setGarment({ base64: (op as any).base64 });
     else setGarment({ imageUrl: (op as any).imageUrl });
-    setResultB64(null); // เปลี่ยนตัวเลือกให้ล้างผลเก่า
   };
 
-  // กด “View Result” → ไปหน้า result เพื่อยิง BE/แสดงโหลด/บันทึก
+  // ไปหน้าแสดงผล
   const run = async () => {
     if (!personB64) return Alert.alert("Please upload your photo first.");
     if (!garment?.base64 && !garment?.imageUrl)
       return Alert.alert("Please select a shirt.");
-
     router.push("/try-on-result");
   };
 
@@ -213,6 +231,11 @@ export default function TryOnScreen() {
           )}
 
           <SectionTitle>Select a Shirt</SectionTitle>
+
+          {catLoading && catalog.length === 0 ? (
+              <ActivityIndicator style={{ marginLeft: 16 }} />
+          ) : null}
+
           <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
@@ -254,17 +277,11 @@ export default function TryOnScreen() {
                 marginTop: 8,
               }}
           >
-            <GhostBtn
-                title="Change Photo"
-                onPress={pickPerson}
-                style={{ flex: 1 }}
-            />
+            <GhostBtn title="Change Photo" onPress={pickPerson} style={{ flex: 1 }} />
             <PrimaryBtn
                 title={APP_CONFIG.USE_MOCK_ML ? "View Result (Mock)" : "View Result"}
                 onPress={run}
-                disabled={
-                    busy || !personB64 || (!garment?.base64 && !garment?.imageUrl)
-                }
+                disabled={busy || !personB64 || (!garment?.base64 && !garment?.imageUrl)}
                 style={{
                   flex: 1,
                   opacity:
@@ -276,8 +293,6 @@ export default function TryOnScreen() {
           </View>
 
           {busy && <ActivityIndicator style={{ marginTop: 8 }} />}
-
-          {/* ไม่แสดงผลลัพธ์ในหน้านี้แล้ว — ไปโชว์ที่ try-on-result แทน */}
         </ScrollView>
       </Screen>
   );

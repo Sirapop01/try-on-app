@@ -10,10 +10,11 @@ function getBackendBase() {
 export const APP_CONFIG = {
 
   CLOUDINARY: {
-    CLOUD_NAME: process.env.EXPO_PUBLIC_CLOUDINARY_NAME!,
-    UPLOAD_PRESET: process.env.EXPO_PUBLIC_CLOUDINARY_PRESET!,
-    FOLDER_PREFIX: "tryon",
+    CLOUD_NAME: "matchweb",
+    UPLOAD_PRESET: "tryon_unsigned",
+    FOLDER_PREFIX: "tryon",           // ทุกอัพโหลดจะเก็บภายใต้ "catalog/<uid>"
     DEFAULT_MIME: "image/jpeg" as const,
+    RETURN_DELETE_TOKEN: true,          // เปิดถ้าอยากลบจาก client ด้วย delete_token
   },
   USE_MOCK_ML: false,
   ML_BACKEND_URL: "http://192.168.1.103:8000",
