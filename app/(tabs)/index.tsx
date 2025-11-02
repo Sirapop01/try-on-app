@@ -1,4 +1,7 @@
-// app/(tabs)/index.tsx
+// app/(tabs)/index.tsx — Minimal B/W Catalog & My Shirts
+// - เอา Search bar ออก
+// - คง Category chips + Clear
+// - Grid columns (1/2/3) ทั้ง Catalog/Mine
 import React, { useEffect, useMemo, useState } from "react";
 import {
     View,
@@ -9,15 +12,15 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     Alert as RNAlert,
+    ScrollView,
 } from "react-native";
-import { Screen, Segmented, SectionTitle, PlusPrimary, PlusSmall } from "../../components/ui";
+import { Screen, Segmented, SectionTitle } from "../../components/ui";
 import { useRouter } from "expo-router";
 import { useSelectionStore } from "../../store/selectionStore";
 import * as ImagePicker from "expo-image-picker";
 import * as ImageManipulator from "expo-image-manipulator";
 import { useAuthState } from "../../hooks/useAuth";
 import { ALERT_TYPE, Dialog, Toast } from "react-native-alert-notification";
-import { useUserProfile } from "../../hooks/useUserProfile";
 import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -30,28 +33,101 @@ import {
     type UserShirt,
 } from "@/services/garments";
 
+/** ====== Minimal palette ====== */
+const C = {
+    black: "#000000",
+    white: "#FFFFFF",
+    gray900: "#111827",
+    gray600: "#4B5563",
+    gray500: "#9CA3AF",
+    gray300: "#D1D5DB",
+    gray200: "#E5E7EB",
+    gray100: "#F3F4F6",
+};
+
 const WIDTH = Dimensions.get("window").width;
 const H_PAD = 12;
 const GAP = 10;
 
-/** ความกว้างการ์ดตามจำนวนคอลัมน์ */
+/** utils */
 const cardWidth = (cols: number) => (WIDTH - H_PAD * 2 - GAP * (cols - 1)) / cols;
-/** ความสูงรูปตามจำนวนคอลัมน์ (ให้กริดดูบาลานซ์) */
 const imageHeight = (cols: number) => (cols === 1 ? 220 : cols === 2 ? 180 : 150);
+
+/** Minimal buttons */
+function Btn({
+                 title,
+                 onPress,
+                 style,
+                 disabled,
+             }: {
+    title: string;
+    onPress?: () => void;
+    style?: any;
+    disabled?: boolean;
+}) {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            disabled={disabled}
+            style={[
+                {
+                    backgroundColor: C.black,
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: C.black,
+                    opacity: disabled ? 0.6 : 1,
+                },
+                style,
+            ]}
+        >
+            <Text style={{ color: C.white, fontWeight: "700", textAlign: "center" }}>{title}</Text>
+        </TouchableOpacity>
+    );
+}
+
+function BtnOutline({
+                        title,
+                        onPress,
+                        style,
+                        disabled,
+                    }: {
+    title: string;
+    onPress?: () => void;
+    style?: any;
+    disabled?: boolean;
+}) {
+    return (
+        <TouchableOpacity
+            onPress={onPress}
+            disabled={disabled}
+            style={[
+                {
+                    backgroundColor: C.white,
+                    paddingVertical: 12,
+                    borderRadius: 12,
+                    borderWidth: 1,
+                    borderColor: C.black,
+                    opacity: disabled ? 0.6 : 1,
+                },
+                style,
+            ]}
+        >
+            <Text style={{ color: C.black, fontWeight: "700", textAlign: "center" }}>{title}</Text>
+        </TouchableOpacity>
+    );
+}
 
 export default function HomeScreen() {
     const [tab, setTab] = useState<"catalog" | "mine">("catalog");
     const { setGarment } = useSelectionStore();
     const router = useRouter();
     const { user } = useAuthState();
-    const { profile } = useUserProfile();
 
     const tabBarH = useBottomTabBarHeight();
     const insets = useSafeAreaInsets();
-    /** padding ล่างจริง ๆ ให้เลื่อนสุด: แท็บบาร์ + safe area + เผื่อระยะ */
     const bottomPad = tabBarH + insets.bottom + 24;
 
-    /** จำนวนคอลัมน์ */
     const [colsCatalog, setColsCatalog] = useState<1 | 2 | 3>(2);
     const [colsMine, setColsMine] = useState<1 | 2 | 3>(2);
 
@@ -62,20 +138,15 @@ export default function HomeScreen() {
     const [catLoading, setCatLoading] = useState(true);
     const [catError, setCatError] = useState<string | null>(null);
 
-    const displayName =
-        profile?.displayName ??
-        user?.displayName ??
-        (user?.email ? user.email.split("@")[0] : null) ??
-        "User";
+    // ====== Filter: Category only ======
+    const [category, setCategory] = useState<string>("all");
 
-    // ---------- Realtime My Shirts ----------
     useEffect(() => {
         if (!user?.uid) return;
         const unsub = subscribeUserShirts(user.uid, (rows) => setMine(rows), 100);
         return () => unsub && unsub();
     }, [user?.uid]);
 
-    // ---------- Load catalog ----------
     const reloadCatalog = async () => {
         try {
             setCatLoading(true);
@@ -92,7 +163,6 @@ export default function HomeScreen() {
         reloadCatalog();
     }, []);
 
-    // ---------- Actions ----------
     const onTry = (item: CatalogListItem) => {
         setGarment({ id: item.id, name: item.title, imageUrl: item.imageUrl });
         router.push("/(tabs)/try-on");
@@ -176,33 +246,15 @@ export default function HomeScreen() {
         ]);
     };
 
-    // ---------- Small UI ----------
-    const Greeting = ({ name }: { name: string }) => (
-        <View style={{ paddingHorizontal: 16, paddingTop: 10, marginTop: 20 }}>
-            <View
-                style={{
-                    backgroundColor: "#F3F4F6",
-                    borderRadius: 16,
-                    padding: 14,
-                    borderWidth: 1,
-                    borderColor: "#E5E7EB",
-                }}
-            >
-                <Text style={{ color: "#6B7280" }}>Welcome back,</Text>
-                <Text style={{ fontWeight: "800", fontSize: 18, marginTop: 2 }}>{name}!</Text>
-            </View>
-        </View>
-    );
-
     const CatalogCard = ({ item, w, h }: { item: CatalogListItem; w: number; h: number }) => (
         <View
             style={{
                 width: w,
                 borderRadius: 16,
                 overflow: "hidden",
-                backgroundColor: "#fff",
+                backgroundColor: C.white,
                 borderWidth: 1,
-                borderColor: "#E5E7EB",
+                borderColor: C.gray200,
             }}
         >
             <View style={{ position: "relative" }}>
@@ -213,38 +265,31 @@ export default function HomeScreen() {
                             position: "absolute",
                             top: 10,
                             left: 10,
-                            backgroundColor: "rgba(0,0,0,0.6)",
+                            backgroundColor: "rgba(0,0,0,0.7)",
                             paddingHorizontal: 10,
                             paddingVertical: 6,
                             borderRadius: 999,
                         }}
                     >
-                        <Text style={{ color: "#fff", fontWeight: "700", fontSize: 12 }}>{item.category}</Text>
+                        <Text style={{ color: C.white, fontWeight: "700", fontSize: 12 }}>{item.category}</Text>
                     </View>
                 )}
             </View>
 
-            <View style={{ padding: 10, gap: 6 }}>
-                <Text style={{ fontWeight: "800", fontSize: 15 }} numberOfLines={1}>
+            <View style={{ padding: 10, gap: 8 }}>
+                <Text style={{ fontWeight: "800", fontSize: 15, color: C.black }} numberOfLines={1}>
                     {item.title}
                 </Text>
                 {!!item.description && (
-                    <Text style={{ color: "#6B7280" }} numberOfLines={2}>
+                    <Text style={{ color: C.gray500 }} numberOfLines={2}>
                         {item.description}
                     </Text>
                 )}
-
-                <TouchableOpacity
-                    onPress={() => onTry(item)}
-                    style={{ marginTop: 2, backgroundColor: "#f59e0b", paddingVertical: 10, borderRadius: 12 }}
-                >
-                    <Text style={{ color: "#fff", fontWeight: "700", textAlign: "center" }}>Try This On</Text>
-                </TouchableOpacity>
+                <Btn title="Try This On" onPress={() => onTry(item)} />
             </View>
         </View>
     );
 
-    /** ปุ่มเลือกจำนวนคอลัมน์ (1/2/3) */
     const GridControl = ({
                              value,
                              onChange,
@@ -253,26 +298,90 @@ export default function HomeScreen() {
         onChange: (v: 1 | 2 | 3) => void;
     }) => (
         <View style={{ flexDirection: "row", gap: 8 }}>
-            {[1, 2, 3].map((n) => (
-                <TouchableOpacity
-                    key={n}
-                    onPress={() => onChange(n as 1 | 2 | 3)}
-                    style={{
-                        paddingVertical: 6,
-                        paddingHorizontal: 12,
-                        borderRadius: 10,
-                        borderWidth: 1,
-                        borderColor: value === n ? "#111827" : "#E5E7EB",
-                        backgroundColor: value === n ? "#111827" : "#fff",
-                    }}
-                >
-                    <Text style={{ color: value === n ? "#fff" : "#111827", fontWeight: "700" }}>{n}</Text>
-                </TouchableOpacity>
-            ))}
+            {[1, 2, 3].map((n) => {
+                const selected = value === (n as 1 | 2 | 3);
+                return (
+                    <TouchableOpacity
+                        key={n}
+                        onPress={() => onChange(n as 1 | 2 | 3)}
+                        style={{
+                            paddingVertical: 6,
+                            paddingHorizontal: 12,
+                            borderRadius: 10,
+                            borderWidth: 1,
+                            borderColor: selected ? C.black : C.gray200,
+                            backgroundColor: selected ? C.black : C.white,
+                        }}
+                    >
+                        <Text style={{ color: selected ? C.white : C.black, fontWeight: "700" }}>{n}</Text>
+                    </TouchableOpacity>
+                );
+            })}
         </View>
     );
 
-    // ---------- Sections ----------
+    // ====== Categories & filtered list (Category only) ======
+    const categories: string[] = useMemo(() => {
+        const set = new Set<string>();
+        catalog.forEach((c) => c.category && set.add(String(c.category)));
+        return ["all", ...Array.from(set)];
+    }, [catalog]);
+
+    const filteredCatalog = useMemo(() => {
+        let arr = [...catalog];
+        if (category !== "all") {
+            arr = arr.filter((it) => String(it.category ?? "") === category);
+        }
+        return arr;
+    }, [catalog, category]);
+
+    const CategoryBar = () => (
+        <View
+            style={{
+                borderWidth: 1,
+                borderColor: C.gray200,
+                backgroundColor: C.white,
+                borderRadius: 16,
+                padding: 12,
+                gap: 10,
+            }}
+        >
+            {/* Category chips */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                {categories.map((cat) => {
+                    const selected = category === cat;
+                    return (
+                        <TouchableOpacity
+                            key={cat}
+                            onPress={() => setCategory(cat)}
+                            style={{
+                                paddingVertical: 6,
+                                paddingHorizontal: 12,
+                                borderRadius: 999,
+                                borderWidth: 1,
+                                borderColor: selected ? C.black : C.gray200,
+                                backgroundColor: selected ? C.black : C.white,
+                            }}
+                        >
+                            <Text style={{ color: selected ? C.white : C.black, fontWeight: "700" }}>
+                                {cat === "all" ? "All" : cat}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
+
+            {/* Clear */}
+            <View style={{ flexDirection: "row", gap: 8 }}>
+                <BtnOutline
+                    title="Clear"
+                    onPress={() => setCategory("all")}
+                    style={{ flex: 1 }}
+                />
+            </View>
+        </View>
+    );
+
     const renderCatalog = () => {
         const w = useMemo(() => cardWidth(colsCatalog), [colsCatalog]);
         const h = useMemo(() => imageHeight(colsCatalog), [colsCatalog]);
@@ -288,21 +397,16 @@ export default function HomeScreen() {
             return (
                 <View style={{ paddingHorizontal: H_PAD, paddingTop: 12, alignItems: "center" }}>
                     <Text style={{ color: "#ef4444", marginBottom: 8 }}>{catError}</Text>
-                    <TouchableOpacity
-                        onPress={reloadCatalog}
-                        style={{ paddingVertical: 10, paddingHorizontal: 14, backgroundColor: "#111827", borderRadius: 10 }}
-                    >
-                        <Text style={{ color: "#fff", fontWeight: "700" }}>ลองใหม่</Text>
-                    </TouchableOpacity>
+                    <Btn title="ลองใหม่" onPress={reloadCatalog} style={{ width: 140 }} />
                 </View>
             );
         }
 
         return (
-            <View style={{ flex: 1, paddingHorizontal: H_PAD, paddingTop: 12 }}>
+            <View style={{ flex: 1, paddingHorizontal: H_PAD, paddingTop: 8 }}>
                 <View
                     style={{
-                        marginBottom: 12,
+                        marginBottom: 10,
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "space-between",
@@ -312,27 +416,31 @@ export default function HomeScreen() {
                     <GridControl value={colsCatalog} onChange={setColsCatalog} />
                 </View>
 
-                {catalog.length === 0 ? (
+                {/* Category-only filter */}
+                <CategoryBar />
+
+                {filteredCatalog.length === 0 ? (
                     <View
                         style={{
-                            marginTop: 4,
+                            marginTop: 12,
                             borderWidth: 1,
-                            borderColor: "#E5E7EB",
+                            borderColor: C.gray200,
                             borderRadius: 16,
                             padding: 16,
                             alignItems: "center",
-                            backgroundColor: "#fff",
+                            backgroundColor: C.white,
                         }}
                     >
-                        <Text style={{ color: "#6B7280" }}>ยังไม่มีรายการแคตตาล็อก</Text>
+                        <Text style={{ color: C.gray600 }}>No items match your filters.</Text>
                     </View>
                 ) : (
                     <FlatList
-                        data={catalog}
+                        data={filteredCatalog}
                         key={`cat-${colsCatalog}`}
                         keyExtractor={(it) => it.id}
                         numColumns={colsCatalog}
                         overScrollMode="always"
+                        keyboardShouldPersistTaps="handled"
                         columnWrapperStyle={colsCatalog > 1 ? { gap: GAP } : undefined}
                         contentContainerStyle={{ gap: GAP, paddingBottom: bottomPad }}
                         ListFooterComponent={<View style={{ height: bottomPad + 24 }} />}
@@ -354,29 +462,25 @@ export default function HomeScreen() {
                         flexDirection: "row",
                         alignItems: "center",
                         justifyContent: "space-between",
-                        marginBottom: 12,
+                        marginBottom: 10,
                     }}
                 >
-                    <Text style={{ fontSize: 16, fontWeight: "700" }}>Your Collection</Text>
+                    <Text style={{ fontSize: 16, fontWeight: "700", color: C.black }}>Your Collection</Text>
 
                     <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
                         <GridControl value={colsMine} onChange={setColsMine} />
-                        <PlusSmall
+                        <BtnOutline
                             title={loadingAdd ? "Adding..." : "Add Shirt"}
                             onPress={addShirt}
-                            style={{ opacity: loadingAdd ? 0.6 : 1 }}
+                            style={{ paddingHorizontal: 12 }}
                         />
                     </View>
                 </View>
 
                 {mine.length === 0 ? (
-                    <View style={{ alignItems: "center", marginTop: 24 }}>
-                        <Text style={{ color: "#6B7280", marginBottom: 12 }}>You haven't added any shirts yet.</Text>
-                        <PlusPrimary
-                            title={loadingAdd ? "Adding..." : "Add Your First Shirt"}
-                            onPress={addShirt}
-                            style={{ opacity: loadingAdd ? 0.6 : 1 }}
-                        />
+                    <View style={{ alignItems: "center", marginTop: 20, gap: 12 }}>
+                        <Text style={{ color: C.gray500 }}>You haven't added any shirts yet.</Text>
+                        <Btn title={loadingAdd ? "Adding..." : "Add Your First Shirt"} onPress={addShirt} />
                     </View>
                 ) : (
                     <FlatList
@@ -385,6 +489,7 @@ export default function HomeScreen() {
                         keyExtractor={(it) => it.id}
                         numColumns={colsMine}
                         overScrollMode="always"
+                        keyboardShouldPersistTaps="handled"
                         columnWrapperStyle={colsMine > 1 ? { gap: GAP } : undefined}
                         contentContainerStyle={{ gap: GAP, paddingBottom: bottomPad }}
                         ListFooterComponent={<View style={{ height: bottomPad + 24 }} />}
@@ -392,14 +497,13 @@ export default function HomeScreen() {
                             <View
                                 style={{
                                     width: w,
-                                    backgroundColor: "#fff",
+                                    backgroundColor: C.white,
                                     borderRadius: 14,
                                     overflow: "hidden",
                                     borderWidth: 1,
-                                    borderColor: "#E5E7EB",
+                                    borderColor: C.gray200,
                                 }}
                             >
-                                {/* ปุ่มลบรูป (มุมขวาบน) */}
                                 <TouchableOpacity
                                     onPress={() => confirmDelete(it.id)}
                                     style={{
@@ -407,32 +511,19 @@ export default function HomeScreen() {
                                         top: 8,
                                         right: 8,
                                         zIndex: 10,
-                                        backgroundColor: "rgba(0,0,0,0.55)",
+                                        backgroundColor: "rgba(0,0,0,0.6)",
                                         paddingVertical: 6,
                                         paddingHorizontal: 10,
                                         borderRadius: 999,
                                     }}
                                 >
-                                    <Text style={{ color: "#fff", fontWeight: "700" }}>🗑</Text>
+                                    <Text style={{ color: C.white, fontWeight: "700" }}>🗑</Text>
                                 </TouchableOpacity>
 
-                                {/* รูป */}
                                 <Image source={{ uri: it.imageUrl }} style={{ width: "100%", height: h }} />
 
-                                {/* ปุ่ม Try On ใต้รูป */}
                                 <View style={{ padding: 10 }}>
-                                    <TouchableOpacity
-                                        onPress={() => goTryOnWith(it)}
-                                        style={{
-                                            backgroundColor: "#111827",
-                                            paddingVertical: 10,
-                                            borderRadius: 12,
-                                        }}
-                                    >
-                                        <Text style={{ color: "#fff", fontWeight: "700", textAlign: "center" }}>
-                                            Try On
-                                        </Text>
-                                    </TouchableOpacity>
+                                    <Btn title="Try On" onPress={() => goTryOnWith(it)} />
                                 </View>
                             </View>
                         )}
@@ -443,12 +534,9 @@ export default function HomeScreen() {
     };
 
     return (
-        <Screen style={{ flex: 1 }}>
-            <Greeting name={displayName} />
+        <Screen style={{ flex: 1, backgroundColor: C.white, paddingTop: 6 }}>
             <Segmented value={tab} onChange={setTab} counts={{ catalog: catalog.length, mine: mine.length }} />
-            <View style={{ flex: 1 }}>
-                {tab === "catalog" ? renderCatalog() : renderMine()}
-            </View>
+            <View style={{ flex: 1 }}>{tab === "catalog" ? renderCatalog() : renderMine()}</View>
         </Screen>
     );
 }
