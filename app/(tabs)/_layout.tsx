@@ -2,8 +2,10 @@
 import React from "react";
 import { Tabs } from "expo-router";
 import Ionicons from "@expo/vector-icons/Ionicons";
+import { useAuth } from "@/context/AuthContext";
 
 export default function TabsLayout() {
+    const { user } = useAuth();
     return (
         <Tabs
             screenOptions={{
