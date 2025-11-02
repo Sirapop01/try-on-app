@@ -1,65 +1,83 @@
 // app/_layout.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Slot, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useAuthState } from "../hooks/useAuth";
+import { StatusBar } from "expo-status-bar";
+import { SafeAreaProvider, SafeAreaView } from "react-native-safe-area-context";
 import { AlertNotificationRoot } from "react-native-alert-notification";
-import { AuthProvider } from "@/context/AuthContext";
-// กันไม่ให้ซ่อนเองอัตโนมัติ (เรียกครั้งเดียวระดับโมดูล)
-SplashScreen.preventAutoHideAsync().catch(() => { /* ignore */ });
 
-const MIN_SPLASH_MS = 1800; // ปรับช่วง 1500–2000ms ตามต้องการ
+import { AuthProvider } from "@/context/AuthContext";
+import { useAuthState } from "../hooks/useAuth";
+
+// กันไม่ให้ Splash ซ่อนเองอัตโนมัติ (รอบเดียวที่โหลดโมดูล)
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
+const MIN_SPLASH_MS = 1800; // 1500–2000 กำลังดี
 
 export default function RootLayout() {
+  return (
+      <AuthProvider>
+        <AlertNotificationRoot>
+          <SafeAreaProvider>
+            <Gate />
+          </SafeAreaProvider>
+        </AlertNotificationRoot>
+      </AuthProvider>
+  );
+}
+
+/**
+ * แยก Gate ออกมาเพราะต้องใช้ hooks ที่พึ่งพา Providers ด้านบน
+ * - จัดการ Splash ให้ครบเวลาขั้นต่ำ + รอ init เสร็จ
+ * - Guard เส้นทางตามสถานะล็อกอิน
+ */
+function Gate() {
   const { user, initializing } = useAuthState();
   const router = useRouter();
   const segments = useSegments();
 
-  // เวลาเริ่มแสดง splash (ครั้งแรกที่ component ถูก mount)
+  // เวลาเริ่มแสดง splash
   const [startedAt] = useState<number>(() => Date.now());
-  const [hid, setHid] = useState(false);
+  const [splashHidden, setSplashHidden] = useState(false);
 
-  // Guard เส้นทางตามเดิม
+  // Guard เส้นทาง: ส่งไป /login ถ้าไม่ล็อกอินและอยู่นอกกลุ่ม (auth)
   useEffect(() => {
     if (initializing) return;
     const inAuthGroup = segments[0] === "(auth)";
     if (!user && !inAuthGroup) {
       router.replace("/(auth)/login");
     } else if (user && inAuthGroup) {
-      router.replace("/(tabs)");
+      router.replace("/(tabs)"); // หรือเส้นทาง home หลักของคุณ
     }
   }, [user, initializing, segments, router]);
 
-  // ควบคุมการซ่อน Splash: รอ init เสร็จ + ให้ครบ MIN_SPLASH_MS
+  // คุม Splash: ให้ครบ MIN_SPLASH_MS และรอ init เสร็จ
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (initializing || hid) return;
+      if (splashHidden || initializing) return;
 
       const elapsed = Date.now() - startedAt;
       const remain = Math.max(0, MIN_SPLASH_MS - elapsed);
-
       await new Promise((r) => setTimeout(r, remain));
 
       if (!cancelled) {
         try {
           await SplashScreen.hideAsync();
-          setHid(true);
-        } catch {
-          // ignore
-        }
+          setSplashHidden(true);
+        } catch {}
       }
     })();
+    return () => {
+      cancelled = true;
+    };
+  }, [initializing, startedAt, splashHidden]);
 
-    return () => { cancelled = true; };
-  }, [initializing, startedAt, hid]);
-
-  // ครอบทั้งแอปด้วย AlertNotificationRoot
+  // พื้นหลังโทนขาว-ดำมินิมอล
   return (
-      <AuthProvider>
-        <AlertNotificationRoot>
-          <Slot />
-        </AlertNotificationRoot>
-      </AuthProvider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
+        <StatusBar style="dark" />
+        <Slot />
+      </SafeAreaView>
   );
 }
