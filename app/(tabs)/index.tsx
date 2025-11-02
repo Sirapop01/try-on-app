@@ -1,5 +1,5 @@
 // app/(tabs)/index.tsx
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     View,
     Text,
@@ -18,6 +18,8 @@ import * as ImageManipulator from "expo-image-manipulator";
 import { useAuthState } from "../../hooks/useAuth";
 import { ALERT_TYPE, Dialog, Toast } from "react-native-alert-notification";
 import { useUserProfile } from "../../hooks/useUserProfile";
+import { useBottomTabBarHeight } from "@react-navigation/bottom-tabs";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { listCatalog, type CatalogListItem } from "@/services/catalog";
 import { uploadUriToCloudinary } from "@/services/cloudinary";
@@ -31,8 +33,11 @@ import {
 const WIDTH = Dimensions.get("window").width;
 const H_PAD = 12;
 const GAP = 10;
-const CARD_W = WIDTH - H_PAD * 2;
-const SNAP = CARD_W + GAP;
+
+/** ความกว้างการ์ดตามจำนวนคอลัมน์ */
+const cardWidth = (cols: number) => (WIDTH - H_PAD * 2 - GAP * (cols - 1)) / cols;
+/** ความสูงรูปตามจำนวนคอลัมน์ (ให้กริดดูบาลานซ์) */
+const imageHeight = (cols: number) => (cols === 1 ? 220 : cols === 2 ? 180 : 150);
 
 export default function HomeScreen() {
     const [tab, setTab] = useState<"catalog" | "mine">("catalog");
@@ -41,11 +46,18 @@ export default function HomeScreen() {
     const { user } = useAuthState();
     const { profile } = useUserProfile();
 
-    // My Shirts (realtime)
+    const tabBarH = useBottomTabBarHeight();
+    const insets = useSafeAreaInsets();
+    /** padding ล่างจริง ๆ ให้เลื่อนสุด: แท็บบาร์ + safe area + เผื่อระยะ */
+    const bottomPad = tabBarH + insets.bottom + 24;
+
+    /** จำนวนคอลัมน์ */
+    const [colsCatalog, setColsCatalog] = useState<1 | 2 | 3>(2);
+    const [colsMine, setColsMine] = useState<1 | 2 | 3>(2);
+
     const [mine, setMine] = useState<UserShirt[]>([]);
     const [loadingAdd, setLoadingAdd] = useState(false);
 
-    // Catalog (Firestore)
     const [catalog, setCatalog] = useState<CatalogListItem[]>([]);
     const [catLoading, setCatLoading] = useState(true);
     const [catError, setCatError] = useState<string | null>(null);
@@ -68,7 +80,7 @@ export default function HomeScreen() {
         try {
             setCatLoading(true);
             setCatError(null);
-            const items = await listCatalog(30);
+            const items = await listCatalog(60);
             setCatalog(items);
         } catch (e: any) {
             setCatError(e?.message ?? "โหลดแคตตาล็อกไม่สำเร็จ");
@@ -112,19 +124,19 @@ export default function HomeScreen() {
 
         try {
             setLoadingAdd(true);
-            // แปลงเป็น JPEG (กัน HEIC/WEBP)
-            const out = await ImageManipulator.manipulateAsync(
-                r.assets[0].uri,
-                [],
-                { compress: 0.9, format: "jpeg" as any }
-            );
-            // อัปโหลดขึ้น Cloudinary
-            const up = await uploadUriToCloudinary(out.uri); // up.secure_url
-            // บันทึก URL ลง Firestore
+            const out = await ImageManipulator.manipulateAsync(r.assets[0].uri, [], {
+                compress: 0.9,
+                format: "jpeg" as any,
+            });
+            const up = await uploadUriToCloudinary(out.uri);
             await addUserShirtUrl(user.uid, up.secure_url);
 
-            Toast.show({ type: ALERT_TYPE.SUCCESS, title: "เพิ่มแล้ว", textBody: "เสื้อของคุณถูกเพิ่มใน My Shirts" });
-            setTab("mine"); // realtime จะเด้งเอง
+            Toast.show({
+                type: ALERT_TYPE.SUCCESS,
+                title: "เพิ่มแล้ว",
+                textBody: "เสื้อของคุณถูกเพิ่มใน My Shirts",
+            });
+            setTab("mine");
         } catch (e: any) {
             Dialog.show({
                 type: ALERT_TYPE.DANGER,
@@ -151,7 +163,6 @@ export default function HomeScreen() {
                 onPress: async () => {
                     try {
                         await deleteUserShirt(id);
-                        // ไม่ต้อง refresh — subscribe จะอัปเดตให้เอง
                     } catch (e: any) {
                         Dialog.show({
                             type: ALERT_TYPE.DANGER,
@@ -183,10 +194,10 @@ export default function HomeScreen() {
         </View>
     );
 
-    const CatalogCard = ({ item }: { item: CatalogListItem }) => (
+    const CatalogCard = ({ item, w, h }: { item: CatalogListItem; w: number; h: number }) => (
         <View
             style={{
-                width: CARD_W,
+                width: w,
                 borderRadius: 16,
                 overflow: "hidden",
                 backgroundColor: "#fff",
@@ -195,13 +206,13 @@ export default function HomeScreen() {
             }}
         >
             <View style={{ position: "relative" }}>
-                <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: 220 }} resizeMode="cover" />
+                <Image source={{ uri: item.imageUrl }} style={{ width: "100%", height: h }} resizeMode="cover" />
                 {!!item.category && (
                     <View
                         style={{
                             position: "absolute",
-                            top: 12,
-                            left: 12,
+                            top: 10,
+                            left: 10,
                             backgroundColor: "rgba(0,0,0,0.6)",
                             paddingHorizontal: 10,
                             paddingVertical: 6,
@@ -213,8 +224,8 @@ export default function HomeScreen() {
                 )}
             </View>
 
-            <View style={{ padding: 12, gap: 8 }}>
-                <Text style={{ fontWeight: "800", fontSize: 16 }} numberOfLines={1}>
+            <View style={{ padding: 10, gap: 6 }}>
+                <Text style={{ fontWeight: "800", fontSize: 15 }} numberOfLines={1}>
                     {item.title}
                 </Text>
                 {!!item.description && (
@@ -225,7 +236,7 @@ export default function HomeScreen() {
 
                 <TouchableOpacity
                     onPress={() => onTry(item)}
-                    style={{ marginTop: 4, backgroundColor: "#f59e0b", paddingVertical: 12, borderRadius: 12 }}
+                    style={{ marginTop: 2, backgroundColor: "#f59e0b", paddingVertical: 10, borderRadius: 12 }}
                 >
                     <Text style={{ color: "#fff", fontWeight: "700", textAlign: "center" }}>Try This On</Text>
                 </TouchableOpacity>
@@ -233,8 +244,39 @@ export default function HomeScreen() {
         </View>
     );
 
+    /** ปุ่มเลือกจำนวนคอลัมน์ (1/2/3) */
+    const GridControl = ({
+                             value,
+                             onChange,
+                         }: {
+        value: 1 | 2 | 3;
+        onChange: (v: 1 | 2 | 3) => void;
+    }) => (
+        <View style={{ flexDirection: "row", gap: 8 }}>
+            {[1, 2, 3].map((n) => (
+                <TouchableOpacity
+                    key={n}
+                    onPress={() => onChange(n as 1 | 2 | 3)}
+                    style={{
+                        paddingVertical: 6,
+                        paddingHorizontal: 12,
+                        borderRadius: 10,
+                        borderWidth: 1,
+                        borderColor: value === n ? "#111827" : "#E5E7EB",
+                        backgroundColor: value === n ? "#111827" : "#fff",
+                    }}
+                >
+                    <Text style={{ color: value === n ? "#fff" : "#111827", fontWeight: "700" }}>{n}</Text>
+                </TouchableOpacity>
+            ))}
+        </View>
+    );
+
     // ---------- Sections ----------
     const renderCatalog = () => {
+        const w = useMemo(() => cardWidth(colsCatalog), [colsCatalog]);
+        const h = useMemo(() => imageHeight(colsCatalog), [colsCatalog]);
+
         if (catLoading) {
             return (
                 <View style={{ paddingHorizontal: H_PAD, paddingTop: 12 }}>
@@ -242,7 +284,6 @@ export default function HomeScreen() {
                 </View>
             );
         }
-
         if (catError) {
             return (
                 <View style={{ paddingHorizontal: H_PAD, paddingTop: 12, alignItems: "center" }}>
@@ -257,13 +298,24 @@ export default function HomeScreen() {
             );
         }
 
-        if (!catalog.length) {
-            return (
-                <View style={{ paddingHorizontal: H_PAD, paddingTop: 12 }}>
+        return (
+            <View style={{ flex: 1, paddingHorizontal: H_PAD, paddingTop: 12 }}>
+                <View
+                    style={{
+                        marginBottom: 12,
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                    }}
+                >
                     <SectionTitle>Explore Collection</SectionTitle>
+                    <GridControl value={colsCatalog} onChange={setColsCatalog} />
+                </View>
+
+                {catalog.length === 0 ? (
                     <View
                         style={{
-                            marginTop: 16,
+                            marginTop: 4,
                             borderWidth: 1,
                             borderColor: "#E5E7EB",
                             borderRadius: 16,
@@ -274,109 +326,129 @@ export default function HomeScreen() {
                     >
                         <Text style={{ color: "#6B7280" }}>ยังไม่มีรายการแคตตาล็อก</Text>
                     </View>
-                </View>
-            );
-        }
-
-        return (
-            <>
-                <SectionTitle>Explore Collection</SectionTitle>
-                <FlatList
-                    data={catalog}
-                    keyExtractor={(it) => it.id}
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    decelerationRate="fast"
-                    snapToInterval={SNAP}
-                    snapToAlignment="start"
-                    disableIntervalMomentum
-                    contentContainerStyle={{ paddingHorizontal: H_PAD }}
-                    ItemSeparatorComponent={() => <View style={{ width: GAP }} />}
-                    renderItem={({ item }) => (
-                        <View style={{ width: CARD_W }}>
-                            <CatalogCard item={item} />
-                        </View>
-                    )}
-                />
-            </>
+                ) : (
+                    <FlatList
+                        data={catalog}
+                        key={`cat-${colsCatalog}`}
+                        keyExtractor={(it) => it.id}
+                        numColumns={colsCatalog}
+                        overScrollMode="always"
+                        columnWrapperStyle={colsCatalog > 1 ? { gap: GAP } : undefined}
+                        contentContainerStyle={{ gap: GAP, paddingBottom: bottomPad }}
+                        ListFooterComponent={<View style={{ height: bottomPad + 24 }} />}
+                        renderItem={({ item }) => <CatalogCard item={item} w={w} h={h} />}
+                    />
+                )}
+            </View>
         );
     };
 
-    const renderMine = () => (
-        <View style={{ paddingHorizontal: H_PAD, marginTop: 8 }}>
-            <View
-                style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    marginBottom: 12,
-                }}
-            >
-                <Text style={{ fontSize: 16, fontWeight: "700" }}>Your Collection</Text>
-                <PlusSmall
-                    title={loadingAdd ? "Adding..." : "Add Shirt"}
-                    onPress={addShirt}
-                    style={{ opacity: loadingAdd ? 0.6 : 1 }}
-                />
-            </View>
+    const renderMine = () => {
+        const w = useMemo(() => cardWidth(colsMine), [colsMine]);
+        const h = useMemo(() => imageHeight(colsMine), [colsMine]);
 
-            {mine.length === 0 ? (
-                <View style={{ alignItems: "center", marginTop: 24 }}>
-                    <Text style={{ color: "#6B7280", marginBottom: 12 }}>
-                        You haven't added any shirts yet.
-                    </Text>
-                    <PlusPrimary
-                        title={loadingAdd ? "Adding..." : "Add Your First Shirt"}
-                        onPress={addShirt}
-                        style={{ opacity: loadingAdd ? 0.6 : 1 }}
-                    />
+        return (
+            <View style={{ flex: 1, paddingHorizontal: H_PAD, paddingTop: 8 }}>
+                <View
+                    style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        marginBottom: 12,
+                    }}
+                >
+                    <Text style={{ fontSize: 16, fontWeight: "700" }}>Your Collection</Text>
+
+                    <View style={{ flexDirection: "row", gap: 10, alignItems: "center" }}>
+                        <GridControl value={colsMine} onChange={setColsMine} />
+                        <PlusSmall
+                            title={loadingAdd ? "Adding..." : "Add Shirt"}
+                            onPress={addShirt}
+                            style={{ opacity: loadingAdd ? 0.6 : 1 }}
+                        />
+                    </View>
                 </View>
-            ) : (
-                <View style={{ gap: GAP, paddingBottom: 16 }}>
-                    {mine.map((it) => (
-                        <View
-                            key={it.id}
-                            style={{
-                                width: "100%",
-                                backgroundColor: "#fff",
-                                borderRadius: 14,
-                                overflow: "hidden",
-                                borderWidth: 1,
-                                borderColor: "#E5E7EB",
-                            }}
-                        >
-                            {/* ปุ่มลบรูป (มุมขวาบน) */}
-                            <TouchableOpacity
-                                onPress={() => confirmDelete(it.id)}
+
+                {mine.length === 0 ? (
+                    <View style={{ alignItems: "center", marginTop: 24 }}>
+                        <Text style={{ color: "#6B7280", marginBottom: 12 }}>You haven't added any shirts yet.</Text>
+                        <PlusPrimary
+                            title={loadingAdd ? "Adding..." : "Add Your First Shirt"}
+                            onPress={addShirt}
+                            style={{ opacity: loadingAdd ? 0.6 : 1 }}
+                        />
+                    </View>
+                ) : (
+                    <FlatList
+                        data={mine}
+                        key={`mine-${colsMine}`}
+                        keyExtractor={(it) => it.id}
+                        numColumns={colsMine}
+                        overScrollMode="always"
+                        columnWrapperStyle={colsMine > 1 ? { gap: GAP } : undefined}
+                        contentContainerStyle={{ gap: GAP, paddingBottom: bottomPad }}
+                        ListFooterComponent={<View style={{ height: bottomPad + 24 }} />}
+                        renderItem={({ item: it }) => (
+                            <View
                                 style={{
-                                    position: "absolute",
-                                    top: 8,
-                                    right: 8,
-                                    zIndex: 10,
-                                    backgroundColor: "rgba(0,0,0,0.55)",
-                                    paddingVertical: 6,
-                                    paddingHorizontal: 10,
-                                    borderRadius: 999,
+                                    width: w,
+                                    backgroundColor: "#fff",
+                                    borderRadius: 14,
+                                    overflow: "hidden",
+                                    borderWidth: 1,
+                                    borderColor: "#E5E7EB",
                                 }}
                             >
-                                <Text style={{ color: "#fff", fontWeight: "700" }}>🗑</Text>
-                            </TouchableOpacity>
+                                {/* ปุ่มลบรูป (มุมขวาบน) */}
+                                <TouchableOpacity
+                                    onPress={() => confirmDelete(it.id)}
+                                    style={{
+                                        position: "absolute",
+                                        top: 8,
+                                        right: 8,
+                                        zIndex: 10,
+                                        backgroundColor: "rgba(0,0,0,0.55)",
+                                        paddingVertical: 6,
+                                        paddingHorizontal: 10,
+                                        borderRadius: 999,
+                                    }}
+                                >
+                                    <Text style={{ color: "#fff", fontWeight: "700" }}>🗑</Text>
+                                </TouchableOpacity>
 
-                            <TouchableOpacity onPress={() => goTryOnWith(it)}>
-                                <Image source={{ uri: it.imageUrl }} style={{ width: "100%", height: 220 }} />
-                            </TouchableOpacity>
-                        </View>
-                    ))}
-                </View>
-            )}
-        </View>
-    );
+                                {/* รูป */}
+                                <Image source={{ uri: it.imageUrl }} style={{ width: "100%", height: h }} />
+
+                                {/* ปุ่ม Try On ใต้รูป */}
+                                <View style={{ padding: 10 }}>
+                                    <TouchableOpacity
+                                        onPress={() => goTryOnWith(it)}
+                                        style={{
+                                            backgroundColor: "#111827",
+                                            paddingVertical: 10,
+                                            borderRadius: 12,
+                                        }}
+                                    >
+                                        <Text style={{ color: "#fff", fontWeight: "700", textAlign: "center" }}>
+                                            Try On
+                                        </Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
+                    />
+                )}
+            </View>
+        );
+    };
 
     return (
-        <Screen>
+        <Screen style={{ flex: 1 }}>
             <Greeting name={displayName} />
             <Segmented value={tab} onChange={setTab} counts={{ catalog: catalog.length, mine: mine.length }} />
-            {tab === "catalog" ? renderCatalog() : renderMine()}
+            <View style={{ flex: 1 }}>
+                {tab === "catalog" ? renderCatalog() : renderMine()}
+            </View>
         </Screen>
     );
 }

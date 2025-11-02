@@ -5,23 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="23a41679-8930-4729-9007-f1492513ee06" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/not-authorized.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/context/AuthContext.tsx" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hooks/useRequireRole.ts" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/services/catalog.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/_layout.tsx" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/(tabs)/index.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/index.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/profile.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/profile.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/(tabs)/try-on.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/_layout.tsx" beforeDir="false" afterPath="$PROJECT_DIR$/app/_layout.tsx" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/appConfig.ts" beforeDir="false" afterPath="$PROJECT_DIR$/config/appConfig.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/package-lock.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/cloudinary.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/cloudinary.ts" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/services/garments.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/garments.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/services/user.ts" beforeDir="false" afterPath="$PROJECT_DIR$/services/user.ts" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/types/user.ts" beforeDir="false" afterPath="$PROJECT_DIR$/types/user.ts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
