@@ -17,6 +17,6 @@ export const APP_CONFIG = {
     RETURN_DELETE_TOKEN: true,          // เปิดถ้าอยากลบจาก client ด้วย delete_token
   },
   USE_MOCK_ML: false,
-  ML_BACKEND_URL: "http://192.168.1.103:8000",
+  ML_BACKEND_URL: "http://10.147.133.253:8000",
 };
 
