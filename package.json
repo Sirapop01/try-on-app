@@ -2,13 +2,18 @@
   "name": "try-on-app",
   "main": "expo-router/entry",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:ci": "jest --runInBand --coverage"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
@@ -51,10 +56,30 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@testing-library/jest-native": "^5.4.3",
+    "@testing-library/react-native": "^13.3.3",
+    "@types/jest": "^30.0.0",
     "@types/react": "~19.1.0",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
-    "typescript": "~5.9.2"
+    "jest": "^29.7.0",
+    "jest-expo": "^54.0.13",
+    "jest-fetch-mock": "^3.0.3",
+    "react-test-renderer": "^19.1.0",
+    "ts-jest": "^29.4.5",
+    "typescript": "~5.9.2",
+    "whatwg-fetch": "^3.6.20"
   },
-  "private": true
+  "jest": {
+    "preset": "jest-expo",
+    "testEnvironment": "jsdom",
+    "setupFilesAfterEnv": ["<rootDir>/jest.setup.ts"],
+    "transformIgnorePatterns": [
+      "node_modules/(?!(@react-native|react-native|react-clone-referenced-element|expo(nent)?|@expo(nent)?/.*|expo-.*|@expo/.*|@react-navigation/.*|@react-native-picker/.*|react-native-safe-area-context|react-native-gesture-handler)/)"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/$1",
+      "^expo-router$": "<rootDir>/__mocks__/expo-router.ts"
+    }
+  }
 }

@@ -247,7 +247,7 @@ export default function TryOnResult() {
 
                         <View style={{ marginTop: 16, gap: 10 }}>
                             <Btn title={savingFiles ? "Saving…" : "Save to Files"} onPress={saveToFiles} disabled={savingFiles} />
-                            <Btn title={sharing ? "Sharing…" : "Share / Save…"} onPress={shareImage} disabled={sharing} />
+                            <Btn title={sharing ? "Sharing…" : "Share"} onPress={shareImage} disabled={sharing} />
                             <Btn title="Cancel" onPress={goBack} outline />
                         </View>
                     </>

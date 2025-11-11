@@ -101,10 +101,13 @@ export async function saveUserProfile(
 
 // อัปโหลด avatar → Cloudinary แล้วคืน URL
 export async function uploadAvatarAndGetUrl(localUri: string, userId: string) {
-  const b64 = await toBase64Compressed(localUri, 512);
-  const up = await uploadBase64ToCloudinary(b64, {
+  // (ออปชัน) ถ้าต้องการย่อ/บีบอัดก่อนอัปโหลด:
+  // const compressedUri = await compressToUri(localUri, 512);
+  const fileUri = localUri; // หรือใช้ compressedUri
+
+  const up = await uploadFileToCloudinary(fileUri, {
     folder: `tryon/${userId}/avatar`,
     mime: "image/jpeg",
+    fileName: `avatar_${userId}_${Date.now()}.jpg`,
   });
-  return up.secure_url;
 }

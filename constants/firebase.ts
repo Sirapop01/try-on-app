@@ -1,10 +1,14 @@
 // constants/firebase.ts
-// 👉 ใส่ค่าจริงจาก Firebase console ของคุณ
+function required(name: string, value: string | undefined) {
+  if (!value) throw new Error(`Missing env: ${name}`);
+  return value;
+}
+
 export const firebaseConfig = {
-  apiKey:        "AIzaSyBdHPHXliOs0kKgnbDtMzxyILqQo-P3O7U",
-  authDomain:    "tryshirt-bb2ce.firebaseapp.com",
-  projectId:     "tryshirt-bb2ce",
-  storageBucket: "tryshirt-bb2ce.firebasestorage.app",
-  messagingSenderId: "103899653911",
-  appId:         "1:103899653911:web:36d9c148de7864bb81b952",
+  apiKey:        required('NEXT_PUBLIC_FIREBASE_API_KEY', process.env.NEXT_PUBLIC_FIREBASE_API_KEY),
+  authDomain:    required('NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN),
+  projectId:     required('NEXT_PUBLIC_FIREBASE_PROJECT_ID', process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID),
+  storageBucket: required('NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET),
+  messagingSenderId: required('NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID),
+  appId:         required('NEXT_PUBLIC_FIREBASE_APP_ID', process.env.NEXT_PUBLIC_FIREBASE_APP_ID),
 };
